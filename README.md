@@ -1,203 +1,118 @@
-# SmartGrid-Optima ⚡🔋☀️
-
-**A Smart Energy Management RL Environment for Bangalore, India**
-
-Built with the [OpenEnv](https://github.com/meta-pytorch/OpenEnv) framework for the Meta PyTorch Hackathon.
-
----
-
-## 🎯 What is SmartGrid-Optima?
-
-SmartGrid-Optima simulates a real-world energy management scenario where an AI agent manages:
-
-- **Solar Panels** (5kW peak) — Free energy from sunlight
-- **Battery Storage** (10kWh, 92% efficiency) — Store cheap energy for expensive hours
-- **Grid Connection** (BESCOM pricing) — Buy/sell electricity at market rates
-- **Home Load** — Residential or commercial consumption profiles
-
-The agent's goal is to **minimize electricity cost** over a 24-hour period by choosing the optimal action each hour.
-
-## 🌍 Why This Matters
-
-India's electricity grid faces massive peak-hour demand. Smart energy management can:
-- Reduce household electricity bills by 30-50%
-- Optimize renewable energy usage
-- Build grid resilience during outages (monsoon season)
-- Support India's net-zero goals through efficient battery utilization
+<div align="center">
+  <img src="https://img.shields.io/badge/Meta%20PyTorch-Hackathon-blue?style=for-the-badge&logo=pytorch" alt="Meta PyTorch Hackathon">
+  <img src="https://img.shields.io/badge/Hugging%20Face-OpenEnv-yellow?style=for-the-badge&logo=huggingface" alt="Hugging Face OpenEnv">
+  
+  <h1>⚡ SmartGrid-Optima 🔋☀️</h1>
+  <p><strong>A Next-Generation Reinforcement Learning Environment for Smart Energy Management</strong></p>
+  <i>Built for the 2026 Meta PyTorch OpenEnv Hackathon</i>
+</div>
 
 ---
 
-## 🎮 Action Space
+## 🌟 Vision & Purpose
 
+**SmartGrid-Optima** is an advanced, high-fidelity Reinforcement Learning (RL) simulation built on the Meta PyTorch **OpenEnv** framework. It is designed to train, evaluate, and benchmark AI agents acting as intelligent "Smart Energy Managers" for buildings in Bangalore, India. 
+
+As the world rapidly transitions to renewable energy, global electricity grids face immense pressure. In rapidly growing technological hubs like Bangalore, energy demands fluctuate wildly due to localized weather patterns, rolling blackout events, and rigid Time-of-Day (ToD) pricing mandates.
+
+**By mastering this environment, an AI agent proves it can:**
+- **Slash electricity bills by 30-50%** by actively arbitraging peak and off-peak energy pricing.
+- **Guarantee Grid Resilience** by proactively reserving battery storage to survive severe monsoon blackouts.
+- **Accelerate Net-Zero goals** by intelligently maximizing volatile solar energy consumption.
+
+---
+
+## 🧠 Core Concept: Reinforcement Learning (RL)
+
+At its absolute core, **Reinforcement Learning** is a branch of Artificial Intelligence where an agent learns to make optimal decisions by continuously interacting with an external environment. 
+
+In the SmartGrid-Optima benchmark, Large Language Models (LLMs) act as the "brain" of the agent, and the loop operates dynamically over a 24-hour simulation:
+
+1. 👁️ **Observation (State):** The AI observes the current physics of the house (*“It is 2:00 PM, the sun is shining at 5kW, the battery is 50% charged, and grid electricity costs ₹8.00/kWh.”*)
+2. ⚡ **Action:** The AI calculates a logical strategy and executes a command (*"Charge the battery using the free solar power!"*).
+3. 💰 **Reward:** The physics engine fast-forwards an hour and scores the AI based on its efficiency (*"+1.5 points for saving money, or -100 points if the house lost power."*)
+
+---
+
+## 🎮 The Mechanics
+
+### 1. Action Space
+Each hour, the AI must output exactly one discrete decision:
 | Action | Name | Description |
 |--------|------|-------------|
-| `0` | **Idle** | Let solar handle load; buy from grid if needed |
-| `1` | **Charge** | Charge battery from solar (free) or grid (paid) |
-| `2` | **Discharge** | Use battery power to avoid expensive grid purchases |
-| `3` | **Sell** | Sell excess solar/battery power to grid for revenue |
+| `0` | **Idle** | Let the solar panels handle the load natively; buy whatever deficit remains directly from the grid. |
+| `1` | **Charge** | Actively siphon free solar power (or cheap grid power) directly into the battery for later use. |
+| `2` | **Discharge** | Deploy battery power into the house to intentionally avoid buying extremely expensive grid electricity. |
+| `3` | **Sell** | Export excess solar or battery power back onto the government grid for revenue. |
 
-## 👁️ Observation Space
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `hour` | int | Current hour (0-23) |
-| `solar_output_kw` | float | Solar panel output in kW |
-| `cloud_cover_pct` | float | Cloud coverage (0-100%) |
-| `battery_soc` | float | Battery state of charge (0.0-1.0) |
-| `battery_kwh` | float | Battery energy in kWh (0-10) |
-| `grid_price_buy` | float | Grid electricity buy price (₹/kWh) |
-| `grid_price_sell` | float | Grid electricity sell price (₹/kWh) |
-| `grid_available` | bool | Is grid power available |
-| `home_load_kw` | float | Home power consumption in kW |
-| `cost_cumulative` | float | Total cost so far (₹) |
-| `task_id` | str | Active task identifier |
-| `persona` | str | "residential" or "commercial" |
+### 2. Observation Space
+The AI receives a rich, telemetry-dense payload every hour:
+*   **Time & Weather:** `hour`, `solar_output_kw`, `cloud_cover_pct`
+*   **Physics Status:** `battery_soc`, `battery_kwh`, `home_load_kw`
+*   **Grid Economics:** `grid_price_buy`, `grid_price_sell`, `grid_available` (Outage tracker)
+*   **Performance:** `cost_cumulative`
 
 ---
 
-## 📋 Tasks (Easy → Medium → Hard)
+## 📋 Evaluation Benchmarks (Tasks)
 
-### Task 1: `residential_summer_basic` (EASY)
-- **Persona:** Residential (flat ₹5.90/kWh)
-- **Weather:** Clear sky (0-10% clouds)
-- **Battery:** Starts at 30-80% SoC
-- **Challenge:** Optimize solar usage on a sunny day
+Agents evaluating on this environment are subjected to three progressing difficulty tiers:
 
-### Task 2: `commercial_tod_optimization` (MEDIUM)
-- **Persona:** Commercial (Time-of-Day pricing: ₹8-9.50/kWh)
-- **Weather:** Partly cloudy (20-40%)
-- **Battery:** Starts at 20-50% SoC
-- **Challenge:** Exploit peak/off-peak price arbitrage
-
-### Task 3: `commercial_monsoon_resilience` (HARD)
-- **Persona:** Commercial (ToD pricing)
-- **Weather:** Heavy monsoon (70-95% clouds)
-- **Grid:** Random outages (15% chance per hour)
-- **Battery:** Starts at 10-30% SoC
-- **Challenge:** Maintain power during blackouts while minimizing cost
+1. 🟢 **`residential_summer_basic` (Easy):** A perfect, sunny summer day with flat consumer pricing. The LLM simply needs to learn to harvest free solar energy.
+2. 🟡 **`commercial_tod_optimization` (Medium):** A cloudy business day utilizing rigid Time-of-Day pricing tariffs. The LLM must learn to buy power at night and discharge it during peak afternoon hours.
+3. 🔴 **`commercial_monsoon_resilience` (Hard):** A brutal monsoon storm. Solar output is nearly zero, and there is a 15% chance of rolling grid blackouts every hour. The LLM must carefully ration its battery; if the house runs out of power during an outage, the agent suffers a massive -100 point penalty.
 
 ---
 
-## 💰 Reward Function
+## 🏗️ Architecture & Physics Engine
 
-**Raw Reward:** `Cost_NoAI - Cost_WithAI` (savings compared to naive baseline)
+SmartGrid-Optima enforces realistic constraints verified against hardware specifications and BESCOM (Bangalore Electricity Supply Company) pricing models.
 
-**Penalties:**
-- **Blackout:** -100 (SoC drops below 10% during grid outage)
-- **Excessive Cycling:** -2 (rapidly alternating charge/discharge)
-
-**Normalization:** `clamp((Raw - MinReward) / (MaxReward - MinReward), 0.0, 1.0)`
+*   **Solar System:** 5kW peak, modeled directly utilizing a generic Gaussian Bangalore (12.97°N) radiation curve.
+*   **Battery Chemistry:** 10kWh static capacity mapping a 92% round-trip efficiency limit. Capped at 3kW simultaneous charge/discharge rates.
+*   **Scoring Logic:** Scores are meticulously normalized to a strict `[0.0, 1.0]` limit against a theoretical naive baseline proxy, preventing runaway mathematical rewards.
 
 ---
 
-## 🏗️ Architecture
+## 🚀 Setup & Execution
 
-```
-smartgrid_optima/
-├── models.py              ← Pydantic types: EnergyAction, EnergyObservation, EnergyState
-├── data.py                ← Offline: BESCOM pricing, solar curves, weather, load profiles
-├── graders.py             ← 3 task graders scoring 0.0-1.0
-├── client.py              ← WebSocket client (SmartGridEnv)
-├── inference.py           ← LLM agent using OpenAI Client
-├── openenv.yaml           ← OpenEnv manifest
-├── Dockerfile             ← Container definition
-├── pyproject.toml         ← Dependencies
-└── server/
-    ├── smartgrid_environment.py  ← Core 24-hour simulation
-    ├── app.py                     ← FastAPI server
-    └── requirements.txt           ← Server dependencies
-```
-
----
-
-## ⚡ Hardware & Physics
-
-| Component | Specification |
-|-----------|---------------|
-| Solar System | 5kW peak, Bangalore bell curve (12.97°N) |
-| Battery | 10kWh capacity, 92% round-trip efficiency |
-| Max Charge Rate | 3kW per hour |
-| Max Discharge Rate | 3kW per hour |
-| Min SoC | 10% (safety reserve) |
-
-### BESCOM Pricing (Bangalore 2025-26)
-
-| Persona | Period | Rate (₹/kWh) |
-|---------|--------|---------------|
-| Residential | All hours | ₹5.90 (buy) / ₹3.86 (sell) |
-| Commercial | Normal (06-18h) | ₹8.00 |
-| Commercial | Peak (18-22h) | ₹9.50 |
-| Commercial | Night (22-06h) | ₹7.00 |
-| Commercial | Sell | ₹3.20 |
-
----
-
-## 🚀 Setup & Usage
-
-### Local Development
-
+### 1. Local Testing
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd smartgrid_optima
+git clone https://github.com/ArinHarwani/SmartGrid-Optima-.git
+cd SmartGrid-Optima-
 
-# Install dependencies
+# Install the dependencies
 pip install -e .
 
-# Run the server
+# Boot the OpenEnv background server
 uvicorn server.app:app --host 0.0.0.0 --port 8000
-
-# Test the environment
-curl -X POST http://localhost:8000/reset -H "Content-Type: application/json" \
-  -d '{"task_id": "residential_summer_basic", "seed": 42}'
 ```
 
-### Docker
-
+### 2. Run LLM Inference
+By default, the benchmark natively maps to `gpt-4.1-mini`.
 ```bash
-docker build -t smartgrid-optima .
-docker run -p 8000:8000 smartgrid-optima
-```
-
-### Run Inference
-
-```bash
-export HF_TOKEN="your-token"
+export HF_TOKEN="your_hugging_face_token_here"
 export API_BASE_URL="https://api.openai.com/v1"
 export MODEL_NAME="gpt-4.1-mini"
+
 python inference.py
 ```
 
 ---
 
-## 📊 Baseline Scores
+## 📊 Standard Expected Baseline Scores
 
-| Task | Difficulty | Baseline Score |
+Using a zero-shot architecture (`gpt-4.1-mini` at `seed=42`), expected mathematical approximations map to:
+
+| Task | Difficulty | Normalized Agent Output |
 |------|-----------|----------------|
-| `residential_summer_basic` | Easy | ~0.55 |
-| `commercial_tod_optimization` | Medium | ~0.52 |
-| `commercial_monsoon_resilience` | Hard | ~0.48 |
-
-*Scores using GPT-4.1-mini with seed=42*
+| `residential_summer_basic` | Easy | **~0.55** |
+| `commercial_tod_optimization` | Medium | **~0.52** |
+| `commercial_monsoon_resilience` | Hard | **~0.48** |
 
 ---
 
-## 📝 Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `API_BASE_URL` | LLM API endpoint | `https://api.openai.com/v1` |
-| `MODEL_NAME` | Model identifier | `gpt-4.1-mini` |
-| `HF_TOKEN` | API key | *(required, no default)* |
-
----
-
-## 🔗 Links
-
-- [OpenEnv Framework](https://github.com/meta-pytorch/OpenEnv)
-- [OpenEnv Course](https://github.com/raun/openenv-course)
-- [BESCOM Tariff Orders](https://bescom.karnataka.gov.in/)
-
----
-
-*Built for the Meta PyTorch OpenEnv Hackathon 2026*
+<p align="center">
+   <i>Powered by the OpenEnv Core Framework | Designed for robust multi-agent scalability tests.</i>
+</p>
