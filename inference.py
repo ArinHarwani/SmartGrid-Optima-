@@ -35,9 +35,11 @@ from openai import OpenAI
 from client import SmartGridEnv
 from models import EnergyAction
 
+IMAGE_NAME = os.getenv("IMAGE_NAME")  # If you are using docker image
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+
 API_BASE_URL = os.getenv("API_BASE_URL") or "https://api.openai.com/v1"
 MODEL_NAME = os.getenv("MODEL_NAME") or "gpt-4.1-mini"
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 
 TASK_NAME = os.getenv("SMARTGRID_TASK", "commercial_monsoon_resilience")
 BENCHMARK = os.getenv("SMARTGRID_BENCHMARK", "smartgrid_optima")
@@ -141,8 +143,12 @@ async def main() -> None:
         obs = reset_res.observation if hasattr(reset_res, 'observation') else reset_res
 
         action_names = {0: "Idle", 1: "Charge", 2: "Discharge", 3: "Sell"}
+        result = reset_res  # Track current result for done-check
 
         for step in range(1, MAX_STEPS + 1):
+            if result.done:
+                break
+
             action_str = get_model_message(client, step, obs, history)
             action_int = int(action_str)
             action_msg = action_names.get(action_int, "Idle")

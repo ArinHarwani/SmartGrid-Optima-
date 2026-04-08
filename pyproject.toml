@@ -19,9 +19,10 @@ dev = [
 ]
 
 [project.scripts]
-server = "dummy_echo.server.app:main"
+server = "server.app:main"
 
 [tool.setuptools]
 include-package-data = true
-packages = ["dummy_echo", "dummy_echo.server"]
-package-dir = { "dummy_echo" = ".", "dummy_echo.server" = "server" }
+
+[tool.setuptools.packages.find]
+include = ["server", "server.*"]
