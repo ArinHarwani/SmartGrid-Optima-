@@ -1,30 +1,3 @@
-"""
-Inference Script Example
-===================================
-MANDATORY
-- Before submitting, ensure the following variables are defined in your environment configuration:
-    API_BASE_URL   The API endpoint for the LLM.
-    MODEL_NAME     The model identifier to use for inference.
-    HF_TOKEN       Your Hugging Face / API key.
-    LOCAL_IMAGE_NAME The name of the local image to use for the environment if you are using from_docker_image()
-                     method
-
-- Defaults are set only for API_BASE_URL and MODEL_NAME 
-    (and should reflect your active inference setup):
-    API_BASE_URL = os.getenv("API_BASE_URL", "<your-active-endpoint>")
-    MODEL_NAME = os.getenv("MODEL_NAME", "<your-active-model>")
-    
-- The inference script must be named `inference.py` and placed in the root directory of the project
-- Participants must use OpenAI Client for all LLM calls using above variables
-
-STDOUT FORMAT
-- The script must emit exactly three line types to stdout, in this order:
-
-    [START] task=<task_name> env=<benchmark> model=<model_name>
-    [STEP]  step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
-    [END]   success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
-"""
-
 import asyncio
 import os
 import textwrap
@@ -35,7 +8,7 @@ from openai import OpenAI
 from client import SmartGridEnv
 from models import EnergyAction
 
-IMAGE_NAME = os.getenv("IMAGE_NAME")  # If you are using docker image
+IMAGE_NAME = os.getenv("IMAGE_NAME")  
 HF_TOKEN = os.getenv("HF_TOKEN")
 API_KEY = HF_TOKEN or os.getenv("API_KEY")
 
@@ -47,25 +20,13 @@ BENCHMARK = os.getenv("SMARTGRID_BENCHMARK", "smartgrid_optima")
 MAX_STEPS = 24
 TEMPERATURE = 0.1
 MAX_TOKENS = 150
-SUCCESS_SCORE_THRESHOLD = 0.5  # normalized score in [0, 1]
+SUCCESS_SCORE_THRESHOLD = 0.5  
 
-# Max total cost for max potential savings estimation limit
 _MAX_REWARD_PER_STEP = 1.0
 MAX_TOTAL_REWARD = MAX_STEPS * _MAX_REWARD_PER_STEP
 
 SYSTEM_PROMPT = textwrap.dedent(
-    """
-    You are an expert AI energy manager for a building in Bangalore, India.
-    Your goal: MINIMIZE electricity cost over 24 hours by choosing the best action each hour.
-    
-    ACTION SPACE:
-    0: Idle (let solar handle load; buy from grid if needed)
-    1: Charge (from solar or grid)
-    2: Discharge (use battery)
-    3: Sell (sell excess to grid)
-    
-    Reply with exactly one digit — 0, 1, 2, or 3.
-    """
+  
 ).strip()
 
 
@@ -175,7 +136,7 @@ async def main() -> None:
                 break
 
         score = sum(rewards) / MAX_TOTAL_REWARD if MAX_TOTAL_REWARD > 0 else 0.0
-        score = min(max(score, 0.0), 1.0)  # clamp to [0, 1]
+        score = min(max(score, 0.0), 1.0) 
         success = score >= SUCCESS_SCORE_THRESHOLD
 
     finally:
