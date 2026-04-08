@@ -121,7 +121,7 @@ async def main() -> None:
             obs = result.observation if hasattr(result, 'observation') else result
             reward = result.reward if hasattr(result, 'reward') else getattr(obs, "reward", 0.0)
             done = result.done if hasattr(result, 'done') else getattr(obs, "done", False)
-            error = getattr(obs, "last_action_error", None)
+            error = getattr(result, "last_action_error", None) or getattr(obs, "last_action_error", None)
 
             reward = reward if reward is not None else 0.0
 
