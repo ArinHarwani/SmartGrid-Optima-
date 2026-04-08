@@ -102,60 +102,67 @@ async def main() -> None:
 
     env = await SmartGridEnv.from_docker_image(IMAGE_NAME)
 
-    history: List[str] = []
-    rewards: List[float] = []
-    steps_taken = 0
-    score = 0.0
-    success = False
-
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
+    tasks_to_run = [
+        "residential_summer_basic",
+        "commercial_tod_optimization",
+        "commercial_monsoon_resilience"
+    ]
 
     try:
-        reset_res = await env.reset()
-        
-        obs = reset_res.observation if hasattr(reset_res, 'observation') else reset_res
+        for task_id in tasks_to_run:
+            history: List[str] = []
+            rewards: List[float] = []
+            steps_taken = 0
+            score = 0.0
+            success = False
 
-        action_names = {0: "Idle", 1: "Charge", 2: "Discharge", 3: "Sell"}
-        result = reset_res  # Track current result for done-check
+            log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
 
-        for step in range(1, MAX_STEPS + 1):
-            if result.done:
-                break
+            reset_res = await env.reset(task_id=task_id)
+            obs = reset_res.observation if hasattr(reset_res, 'observation') else reset_res
 
-            action_str = get_model_message(client, step, obs, history)
-            action_int = int(action_str)
-            action_msg = action_names.get(action_int, "Idle")
+            action_names = {0: "Idle", 1: "Charge", 2: "Discharge", 3: "Sell"}
+            result = reset_res  # Track current result for done-check
 
-            action_obj = EnergyAction(action=action_int)
-            result = await env.step(action_obj)
+            for step in range(1, MAX_STEPS + 1):
+                if result.done:
+                    break
+
+                action_str = get_model_message(client, step, obs, history)
+                action_int = int(action_str)
+                action_msg = action_names.get(action_int, "Idle")
+
+                action_obj = EnergyAction(action=action_int)
+                result = await env.step(action_obj)
+                
+                obs = result.observation if hasattr(result, 'observation') else result
+                reward = result.reward if hasattr(result, 'reward') else getattr(obs, "reward", 0.0)
+                done = result.done if hasattr(result, 'done') else getattr(obs, "done", False)
+                error = getattr(result, "last_action_error", None) or getattr(obs, "last_action_error", None)
+
+                reward = reward if reward is not None else 0.0
+
+                rewards.append(reward)
+                steps_taken = step
+
+                log_step(step=step, action=action_str, reward=reward, done=done, error=error)
+
+                history.append(f"Step {step}: {action_msg!r} -> reward {reward:+.2f}")
+
+                if done:
+                    break
+
+            score = sum(rewards) / MAX_TOTAL_REWARD if MAX_TOTAL_REWARD > 0 else 0.0
+            score = min(max(score, 0.0), 1.0) 
+            success = score >= SUCCESS_SCORE_THRESHOLD
             
-            obs = result.observation if hasattr(result, 'observation') else result
-            reward = result.reward if hasattr(result, 'reward') else getattr(obs, "reward", 0.0)
-            done = result.done if hasattr(result, 'done') else getattr(obs, "done", False)
-            error = getattr(result, "last_action_error", None) or getattr(obs, "last_action_error", None)
-
-            reward = reward if reward is not None else 0.0
-
-            rewards.append(reward)
-            steps_taken = step
-
-            log_step(step=step, action=action_str, reward=reward, done=done, error=error)
-
-            history.append(f"Step {step}: {action_msg!r} -> reward {reward:+.2f}")
-
-            if done:
-                break
-
-        score = sum(rewards) / MAX_TOTAL_REWARD if MAX_TOTAL_REWARD > 0 else 0.0
-        score = min(max(score, 0.0), 1.0) 
-        success = score >= SUCCESS_SCORE_THRESHOLD
+            log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
     finally:
         try:
             await env.close()
         except Exception as e:
             print(f"[DEBUG] env.close() error (container cleanup): {e}", flush=True)
-        log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
 
 if __name__ == "__main__":
