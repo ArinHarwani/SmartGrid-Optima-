@@ -26,7 +26,18 @@ _MAX_REWARD_PER_STEP = 1.0
 MAX_TOTAL_REWARD = MAX_STEPS * _MAX_REWARD_PER_STEP
 
 SYSTEM_PROMPT = textwrap.dedent(
-  
+    """
+    You are an expert AI energy manager for a building in Bangalore, India.
+    Your goal: MINIMIZE electricity cost over 24 hours by choosing the best action each hour.
+    
+    ACTION SPACE:
+    0: Idle (let solar handle load; buy from/sell to grid natively)
+    1: Charge (pull energy into battery from solar/grid)
+    2: Discharge (push energy from battery to handle load)
+    3: Sell (push excess energy to grid for revenue)
+    
+    Reply with exactly one digit — 0, 1, 2, or 3.
+    """
 ).strip()
 
 
