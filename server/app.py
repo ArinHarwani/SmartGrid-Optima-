@@ -21,6 +21,14 @@ app = create_app(
     max_concurrent_envs=4,
 )
 
+@app.get("/")
+def read_root():
+    return {
+        "status": "running",
+        "environment": "SmartGrid-Optima",
+        "message": "API server is live. Connect via EnvClient using /ws or POST to /reset and /step."
+    }
+
 
 def main(host: str = "0.0.0.0", port: int = 8000):
     import uvicorn
