@@ -36,7 +36,8 @@ from client import SmartGridEnv
 from models import EnergyAction
 
 IMAGE_NAME = os.getenv("IMAGE_NAME")  # If you are using docker image
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+HF_TOKEN = os.getenv("HF_TOKEN")
+API_KEY = HF_TOKEN or os.getenv("API_KEY")
 
 API_BASE_URL = os.getenv("API_BASE_URL") or "https://api.openai.com/v1"
 MODEL_NAME = os.getenv("MODEL_NAME") or "gpt-4.1-mini"
