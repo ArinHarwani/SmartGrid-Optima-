@@ -10,3 +10,7 @@ venv/
 pip-log.txt
 pip-delete-this-directory.txt
 .DS_Store
+*.egg-info/
+dist/
+build/
+uv.lock
