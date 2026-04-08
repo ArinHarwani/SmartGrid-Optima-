@@ -1,3 +1,13 @@
+---
+title: SmartGrid-Optima
+emoji: ⚡
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 <div align="center">
   <img src="https://img.shields.io/badge/Meta%20PyTorch-Hackathon-blue?style=for-the-badge&logo=pytorch" alt="Meta PyTorch Hackathon">
   <img src="https://img.shields.io/badge/Hugging%20Face-OpenEnv-yellow?style=for-the-badge&logo=huggingface" alt="Hugging Face OpenEnv">
