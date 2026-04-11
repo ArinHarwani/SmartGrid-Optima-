@@ -14,3 +14,5 @@ pip-delete-this-directory.txt
 dist/
 build/
 uv.lock
+*.txt
+*.log

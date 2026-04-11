@@ -35,7 +35,7 @@ api.upload_folder(
     repo_id=repo_id,
     repo_type="space",
     ignore_patterns=[
-        "__pycache__", "*.pyc", ".git", ".venv", "push_to_hf.py", "venv"
+        "__pycache__", "*.pyc", ".git", ".venv", "push_to_hf.py", "venv", "*.txt", "*.log"
     ]
 )
 
